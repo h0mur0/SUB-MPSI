@@ -1,0 +1,11 @@
+enclave {
+    
+    include "user_types.h" /* buffer_t */
+
+    trusted {
+        /* type: 0-SPIR, 1-UZS, 2-IT-MPSI */
+        public void randomness_generation(int type, int n, int M, int d, int L, 
+                                          [out, count=len] uint8_t* buffer, size_t len);
+    };
+
+};
