@@ -45,7 +45,7 @@ std::vector<int> vec_add(const std::vector<int>& a, const std::vector<int>& b, i
 }
 
 std::vector<std::vector<int>> generate_datasets_with_intersection(int n, int m, int d, int i_size) {
-    if ((n * (m-i_size) + i_size > d) || (m > i_size)){
+    if ((n * (m-i_size) + i_size > d) || (m < i_size)){
         std::cout << "Invalid parameters!" << std::endl;
         exit(0);
     }
