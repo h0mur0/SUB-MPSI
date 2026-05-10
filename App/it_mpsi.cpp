@@ -19,7 +19,8 @@ task<void> enclave_protocol_proxy(sgx_enclave_id_t eid, Socket& to_leader, std::
     
     // 1. 计算所需缓冲区长度: Rc(d) + (n-1)*Rs(d) + (n-1)*T(d) + c(1)
     size_t buffer_len = (size_t)d + (size_t)(n - 1) * d + (size_t)(n - 1) * d + 1;
-    std::vector<uint8_t> buffer(buffer_len);
+    std::vector<uint8_t> buffer(buffer_len,0);
+    
 
     // 2. 调用 Enclave 获取安全随机数 (协议类型 2 代表 IT-MPSI)
     sgx_status_t res = randomness_generation(eid, 2, n, 0, d, L, buffer.data(), (uint32_t)buffer_len);
@@ -27,6 +28,10 @@ task<void> enclave_protocol_proxy(sgx_enclave_id_t eid, Socket& to_leader, std::
         std::cerr << "SGX ECALL Failed!" << std::endl;
         co_return;
     }
+
+    auto t1 = high_resolution_clock::now();
+    auto time1 = duration_cast<microseconds>(t1 - start).count() / 1000.0;
+    std::cout << "get randomness time: " << time1 << std::endl;
 
     // 3. 解析缓冲区
     auto it = buffer.begin();
@@ -36,6 +41,10 @@ task<void> enclave_protocol_proxy(sgx_enclave_id_t eid, Socket& to_leader, std::
     for(int i=0; i < n-1; ++i) { R_s[i].assign(it, it + d); it += d; }
     for(int i=0; i < n-1; ++i) { T[i].assign(it, it + d); it += d; }
     uint8_t c = *it;
+
+    auto t2 = high_resolution_clock::now();
+    auto time2 = duration_cast<microseconds>(t2 - t1).count() / 1000.0;
+    std::cout << "analyse time: " << time2 << std::endl;
 
     // 4. 分发逻辑 (保持你原有的 Socket 逻辑)
     co_await to_leader.send(R_c);
@@ -50,6 +59,10 @@ task<void> enclave_protocol_proxy(sgx_enclave_id_t eid, Socket& to_leader, std::
         co_await to_servers[i][1]->send(T[i]);
         co_await to_servers[i][1]->send(c);
     }
+
+    auto t3 = high_resolution_clock::now();
+    auto time3 = duration_cast<microseconds>(t3 - t2).count() / 1000.0;
+    std::cout << "distribution time: " << time3 << std::endl;
 
     auto end = high_resolution_clock::now();
     stats.duration_ms = duration_cast<microseconds>(end - start).count() / 1000.0;

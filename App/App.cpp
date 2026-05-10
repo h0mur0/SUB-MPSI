@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-
-# include <unistd.h>
-# include <pwd.h>
-# define MAX_PATH FILENAME_MAX
+#include <unistd.h>
+#include <pwd.h>
+#define MAX_PATH FILENAME_MAX
 
 #include <iostream>
 #include <string>
@@ -144,15 +143,6 @@ int initialize_enclave(void)
     }
 
     return 0;
-}
-
-/* OCall functions */
-void ocall_print_string(const char *str)
-{
-    /* Proxy/Bridge will check the length and null-terminate 
-     * the input string to prevent buffer overflow. 
-     */
-    printf("%s", str);
 }
 
 int SGX_CDECL main(int argc, char* argv[]) {
