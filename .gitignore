@@ -2,3 +2,4 @@ app
 .settings/*
 *.o
 .settings/*
+*.so
