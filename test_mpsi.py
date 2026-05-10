@@ -5,7 +5,7 @@ import statistics
 from datetime import datetime
 
 # Configuration
-EXECUTABLE = "../app"
+EXECUTABLE = "./app"
 RUNNING_MODE = "it-mpsi"
 RUNS_PER_CONFIG = 5 
 N_VALUES = [20, 60, 100]
@@ -18,8 +18,8 @@ D_VALUES = [2**21, 2**22, 2**23]
 
 def run_benchmarks():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    txt_filename = f"result_{timestamp}.txt"
-    csv_filename = f"result_{timestamp}.csv"
+    txt_filename = f"./test_result/result_{timestamp}.txt"
+    csv_filename = f"./test_result/result_{timestamp}.csv"
 
     csv_header = [
         "n", "m", "d", "i", "iterations",
