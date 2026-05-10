@@ -92,7 +92,7 @@ task<void> client_protocol(Socket& from_e, Socket& to_s1, Socket& to_s2,
     stats.recv_bytes = from_e.bytesReceived() + to_s1.bytesReceived() + to_s2.bytesReceived();
 }
 
-void run_spir(sgx_enclave_id_t eid, int M, int q, int b, const std::vector<int>& database, const std::vector<int>& ind) {
+void run_spir(sgx_enclave_id_t eid, int M, int q, int b, const std::vector<int>& database, const std::vector<int>& ind, int vfy) {
     Stats eStats{"Enc_Node"}, s1Stats{"Server 1"}, s2Stats{"Server 2"}, cStats{"Client"};
     std::vector<int> recovered_results(M, -1);
     auto e_s1 = LocalAsyncSocket::makePair();
@@ -112,25 +112,26 @@ void run_spir(sgx_enclave_id_t eid, int M, int q, int b, const std::vector<int>&
 
     auto total_end = high_resolution_clock::now();
     double total_time = duration_cast<microseconds>(total_end - total_start).count() / 1000.0;
+    if (vfy == 1){
+        std::cout << "\n[Correctness Check]" << std::endl;
+        bool all_match = true;
+        for (int idx : ind) {
+            int actual = database[idx];
+            int recovered = recovered_results[idx];
+            if (actual != recovered) {
+                std::cout << "  (!) Mismatch at Index " << idx << ": DB=" << actual << ", Recovered=" << recovered << std::endl;
+                all_match = false;
+            } else {
+                std::cout << "  (+) Match at Index " << idx << ": Value=" << recovered << std::endl;
+            }
+        }
 
-    // std::cout << "\n[Correctness Check]" << std::endl;
-    // bool all_match = true;
-    // for (int idx : ind) {
-    //     int actual = database[idx];
-    //     int recovered = recovered_results[idx];
-    //     if (actual != recovered) {
-    //         std::cout << "  (!) Mismatch at Index " << idx << ": DB=" << actual << ", Recovered=" << recovered << std::endl;
-    //         all_match = false;
-    //     } else {
-    //         std::cout << "  (+) Match at Index " << idx << ": Value=" << recovered << std::endl;
-    //     }
-    // }
-
-    // if (all_match) {
-    //     std::cout << "  >>> RESULT: SPIR Protocol Verified Successfully." << std::endl;
-    // } else {
-    //     std::cout << "  >>> RESULT: SPIR Protocol Verification FAILED." << std::endl;
-    // }
+        if (all_match) {
+            std::cout << "  >>> RESULT: SPIR Protocol Verified Successfully." << std::endl;
+        } else {
+            std::cout << "  >>> RESULT: SPIR Protocol Verification FAILED." << std::endl;
+        }
+    }
 
     std::cout << std::string(85, '=') << std::endl;
     std::cout << "[SPIR Result]" << std::endl;

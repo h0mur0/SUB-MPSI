@@ -148,7 +148,7 @@ int initialize_enclave(void)
 int SGX_CDECL main(int argc, char* argv[]) {
     std::string running_mode = "";
     // 公共参数
-    int n = 3, m = 10, d = 100, q = 100, b = 2, i_val = 2;
+    int n = 3, m = 10, d = 100, q = 100, b = 2, i_val = 2, vfy = 0;
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -159,6 +159,7 @@ int SGX_CDECL main(int argc, char* argv[]) {
         else if (arg == "-q" && i + 1 < argc) q = std::stoi(argv[++i]);
         else if (arg == "-batch" && i + 1 < argc) b = std::stoi(argv[++i]);
         else if (arg == "-i" && i + 1 < argc) i_val = std::stoi(argv[++i]);
+        else if (arg == "-vfy" && i + 1 < argc) vfy = std::stoi(argv[++i]);
     }
 
     if (initialize_enclave() < 0) {
@@ -169,7 +170,7 @@ int SGX_CDECL main(int argc, char* argv[]) {
     if (running_mode == "spir") {
         std::vector<int> db = generate_random_vector(q, m);
         std::vector<int> ind = get_random_subset(m, b);
-        run_spir(global_eid, m, q, b, db, ind);
+        run_spir(global_eid, m, q, b, db, ind, vfy);
     } 
     else if (running_mode == "uzs") {
         std::vector<std::vector<int>> p_sets(n);
