@@ -45,6 +45,9 @@ std::vector<int> vec_add(const std::vector<int>& a, const std::vector<int>& b, i
 }
 
 std::vector<std::vector<int>> generate_datasets_with_intersection(int n, int m, int d, int i_size) {
+    if ((n * (m-i_size) + i_size < d) || (m > i_size)){
+        std::cout << "Invalid parameters: expected incorrect intersection size in the result." << std::endl;
+    }
     std::vector<int> universe(d);
     std::iota(universe.begin(), universe.end(), 0);
     std::random_device rd;

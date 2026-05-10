@@ -1,5 +1,4 @@
 app
 .settings/*
 *.o
-coproto/*
 .settings/*
