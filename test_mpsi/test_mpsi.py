@@ -5,7 +5,7 @@ import statistics
 from datetime import datetime
 
 # Configuration
-EXECUTABLE = "./app"
+EXECUTABLE = "../app"
 RUNNING_MODE = "it-mpsi"
 RUNS_PER_CONFIG = 5 
 N_VALUES = [20, 60, 100]
