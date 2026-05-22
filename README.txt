@@ -1,103 +1,110 @@
-------------------------
-Purpose of SampleEnclave
-------------------------
-The project demonstrates several fundamental usages of Intel(R) Software Guard 
-Extensions (Intel(R) SGX) SDK:
-- Initializing and destroying an enclave
-- Creating ECALLs or OCALLs
-- Calling trusted libraries inside the enclave
+# SUB-MPSI
 
-------------------------------------
-How to Build/Execute the Sample Code
-------------------------------------
-1. Install Intel(R) SGX SDK for Linux* OS
-2. Enclave test key(two options):
-    a. Install openssl first, then the project will generate a test key<Enclave_private_test.pem> automatically when you build the project.
-    b. Rename your test key(3072-bit RSA private key) to <Enclave_private_test.pem> and put it under the <Enclave> folder.
-3. Make sure your environment is set:
-    $ source ${sgx-sdk-install-path}/environment
-4. Build the project with the prepared Makefile:
-    a. Hardware Mode, Debug build:
-        1) Enclave with no mitigation:
-            $ make
-        2) Enclave with mitigations for indirects and returns only:
-            $ make MITIGATION-CVE-2020-0551=CF
-        3) Enclave with full mitigation:
-            $ make MITIGATION-CVE-2020-0551=LOAD
-    b. Hardware Mode, Pre-release build:
-        1) Enclave with no mitigation:
-            $ make SGX_PRERELEASE=1 SGX_DEBUG=0
-        2) Enclave with mitigations for indirects and returns only:
-            $ make SGX_PRERELEASE=1 SGX_DEBUG=0 MITIGATION-CVE-2020-0551=CF
-        3) Enclave with full mitigation:
-            $ make SGX_PRERELEASE=1 SGX_DEBUG=0 MITIGATION-CVE-2020-0551=LOAD
-    c. Hardware Mode, Release build:
-        1) Enclave with no mitigation:
-            $ make SGX_DEBUG=0
-        2) Enclave with mitigations for indirects and returns only:
-            $ make SGX_DEBUG=0 MITIGATION-CVE-2020-0551=CF
-        3) Enclave with full mitigation:
-            $ make SGX_DEBUG=0 MITIGATION-CVE-2020-0551=LOAD
-    d. Simulation Mode, Debug build:
-        $ make SGX_MODE=SIM
-    e. Simulation Mode, Pre-release build:
-        $ make SGX_MODE=SIM SGX_PRERELEASE=1 SGX_DEBUG=0
-    f. Simulation Mode, Release build:
-        $ make SGX_MODE=SIM SGX_DEBUG=0
-5. Execute the binary directly:
-    $ ./app
-6. Remember to "make clean" before switching build mode
+This project implements SUB-MPSI, an information-theoretically secure multi-party private set intersection protocol.
 
-------------------------------------------
-Explanation about Configuration Parameters
-------------------------------------------
-TCSMaxNum, TCSNum, TCSMinPool
+## Envirment
 
-    These three parameters will determine whether a thread will be created
-    dynamically  when there is no available thread to do the work.
+This code and following instructions is tested on Ubuntu 20.04, with g++ 11.5.0, Cmake 3.16.3, and GNU Make 4.2.1. To run this code, a CPU with SGX support is necessary (check with `grep -q sgx /proc/cpuinfo`). Alternatively, you can run this code in SGX simulation mode.
 
+## Building the Project
 
-StackMaxSize, StackMinSize
+### 1. Install Intel SGX
 
-    For a dynamically created thread, StackMinSize is the amount of stack available
-    once the thread is created and StackMaxSize is the total amount of stack that
-    thread can use. The gap between StackMinSize and StackMaxSize is the stack
-    dynamically expanded as necessary at runtime.
+```bash
+# Download the driver
+wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-server/sgx_linux_x64_driver_2.11.0_0373e2e.bin
 
-    For a static thread, only StackMaxSize is relevant which specifies the total
-    amount of stack available to the thread.
+# Install the driver
+sudo chmod +x sgx_linux_x64_driver_2.11.0_0373e2e.bin
+sudo ./sgx_linux_x64_driver_2.11.0_0373e2e.bin
 
+# Install dependencies
+sudo apt-get install build-essential ocaml ocamlbuild automake autoconf libtool wget python libssl-dev git cmake perl
 
-HeapMaxSize, HeapInitSize, HeapMinSize
+# Clone and build SGX SDK
+git clone https://github.com/intel/linux-sgx.git
+cd linux-sgx
+make preparation
+make sdk
+make sdk_install_pkg
 
-    HeapMinSize is the amount of heap available once the enclave is initialized.
+# Install the SDK package
+cd linux/installer/bin
+sudo ./sgx_linux_x64_sdk_*.bin
 
-    HeapMaxSize is the total amount of heap an enclave can use. The gap between
-    HeapMinSize and HeapMaxSize is the heap dynamically expanded as necessary
-    at runtime.
+# Install dependencies
+sudo apt-get install build-essential ocaml ocamlbuild automake autoconf libtool wget python libssl-dev git cmake perl
 
-    HeapInitSize is here for compatibility.
+# Clone and build SGX SDK
+git clone https://github.com/intel/linux-sgx.git
+cd linux-sgx
+make preparation
+make sdk
+make sdk_install_pkg
 
--------------------------------------------------    
-Sample configuration files for the Sample Enclave
--------------------------------------------------
-With below configurations, if the signed enclave is launched on a SGX2 platform
-with SGX2 supported kernel, it will be loaded with EDMM enabled. Otherwise, it
-will behave in way of SGX1.
+# Install the SDK package
+cd linux/installer/bin
+sudo ./sgx_linux_x64_sdk_*.bin
+# When prompted, install to /opt/intel/
 
-    config.01.xml: There is no dynamic thread, no dynamic heap expansion.
-    config.02.xml: There is no dynamic thread. But dynamic heap expansion can happen.
-    config.03.xml: There are dynamic threads. For a dynamic thread, there's no stack expansion.
-    config.04.xml: There are dynamic threads. For a dynamic thread, stack will expanded as necessary.
+# Add repository and install PSW
+echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
+wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install libsgx-launch libsgx-urts libsgx-epid libsgx-quote-ex libsgx-dcap-ql
+```
 
-Below configuration is only workable on a SGX2 platform with SGX2 supported kernel:
+### 2. Build coproto
 
-    config.05.xml: There is a user region where users could operate on.
+```
+git clone https://github.com/ladnir/coproto.git
+cd coproto
+python3 build.py
+```
 
--------------------------------------------------
-Launch token initialization
--------------------------------------------------
-If using libsgx-enclave-common or sgxpsw under version 2.4, an initialized variable launch_token needs to be passed as the 3rd parameter of API sgx_create_enclave. For example,
+### 3. Compile MPSI
 
-sgx_launch_token_t launch_token = {0};
-sgx_create_enclave(ENCLAVE_FILENAME, SGX_DEBUG_FLAG, launch_token, NULL, &global_eid, NULL);
+```bash
+git clone https://anonymous.4open.science/r/SUB-MPSI-CCD8
+cd SUB-MPSI-CCD8
+source /opt/intel/sgxsdk/environment
+make # Use "make SGX_MODE=SIM" for running in simulation mode
+```
+
+## Running the Code
+
+##### Print help information
+
+```bash
+./main
+```
+
+##### example running of our protcols
+
+Run our SPIR with a database size of $1024$, a domain size of $97$, and a batch size of $10$:
+
+```bash
+./app -running spir -m 1024 -q 97 -batch 10
+```
+
+Run our UZS with $5$ participants, each having a set size of $1024$ and a universal set size of $4096$:
+
+```bash
+./app -running uzs -n 5 -m 1024 -d 4096
+```
+
+Run our MPSI with $20$ participants, each having a set size of $1024$, a universal set size of $32768$, and an intersection size of $100$:
+
+```
+./app -running mpsi -n 20 -m 1024 -d 32768 -i 100
+```
+
+##### Parameters
+
+- `-running`: The protocol to execute; supported values are "spir", "uzs", and "mpsi".
+- `-n`: The number of participants in MPSI and UZS.
+- `-m`: The database size in SPIR, or the individual set size per participant in MPSI and UZS.
+- `-d`: The universal set size in MPSI and UZS.
+- -i: The expected intersection size in MPSI.
+- -q: The domain size of each element within the database in SPIR.
+- -batch: The batch size in SPIR.
