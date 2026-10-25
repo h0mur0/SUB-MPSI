@@ -65,7 +65,7 @@ python3 build.py
 ### 3. Compile MPSI
 
 ```bash
-git clone https://anonymous.4open.science/r/SUB-MPSI-CCD8
+git clone https://github.com/h0mur0/SUB-MPSI
 cd SUB-MPSI-CCD8
 source /opt/intel/sgxsdk/environment
 make # Use "make SGX_MODE=SIM" for running in simulation mode
